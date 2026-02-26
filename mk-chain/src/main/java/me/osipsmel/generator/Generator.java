@@ -4,13 +4,15 @@ import java.util.regex.Pattern;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Generator {
+import me.osipsmel.api.GeneratorAPI;
+
+public class Generator implements GeneratorAPI{
     public Generator() {}
 
     private final Random random = new Random();
     private final String gen_delim = " ";
 
-    public String generate(String source, String start, int lenght, int depth) {
+    public String generateBad(String source, String start, int lenght, int depth) {
         List<String> corpus = Tokenizer.tokenize(source);
 
         Map<String, Map<String, Integer>> transitMap = collectTransitions(corpus, depth);
@@ -38,7 +40,8 @@ public class Generator {
         return Tokenizer.textify(generatedTokens);
     }
 
-    public Iterator<String> generateLazy(String source, String start, int length, int depth) {
+    @Override
+    public Iterator<String> generate(String source, String start, int length, int depth) {
         List<String> corpus = Tokenizer.tokenize(source);
         Map<String, Map<String, Integer>> transitMap = collectTransitions(corpus, depth);
         
@@ -70,13 +73,13 @@ public class Generator {
             chain.add(nextToken);
             count++;
 
-            // ЛОГИКА СКЛЕЙКИ ВНУТРИ ИТЕРАТОРА
+
             String result;
             if (nextToken.equals(Tokenizer.NEWLINE_PLACEHOLDER)) {
                 result = Tokenizer.PARAGRAPH_CHARACTER;
                 lastWasNewline = true;
             } else if (!lastWasNewline && isWord(nextToken)) {
-                result = " " + nextToken; // Добавляем пробел ПЕРЕД словом
+                result = " " + nextToken; 
                 lastWasNewline = false;
             } else {
                 result = nextToken;
@@ -164,7 +167,6 @@ public class Generator {
             StringBuilder sb = new StringBuilder();
             for (String token : tokens) {
                 if (token.equals(NEWLINE_PLACEHOLDER)) {
-                    // Убираем возможный пробел перед переносом строки
                     if (sb.length() > 0 && sb.charAt(sb.length() - 1) == ' ') {
                         sb.setLength(sb.length() - 1);
                     }
@@ -172,9 +174,7 @@ public class Generator {
                     continue;
                 }
 
-                // Проверяем, нужно ли ставить пробел перед текущим токеном
                 if (sb.length() > 0 && isWord(token) && !lastCharIsNewline(sb)) {
-                    // Добавляем пробел, только если последний символ - не пробел
                     if (sb.charAt(sb.length() - 1) != ' ') {
                         sb.append(" ");
                     }
@@ -188,7 +188,7 @@ public class Generator {
             return sb.length() > 0 && sb.charAt(sb.length() - 1) == '\n';
         }
         private static boolean isWord(String token) {
-            // Токен считается словом (требует пробела перед собой), 
+            // Токен считается словом => требует перед собой пробела, 
             // если он начинается с буквы, цифры или открывающей скобки/кавычки
             return token.matches("[a-zA-Zа-яА-ЯёЁ0-9«\"\\(].*");
         }

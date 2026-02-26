@@ -1,3 +1,8 @@
+app_data/
+# --- VS Code ---
+.vscode/
+.history/
+
 # Compiled class file
 *.class
 

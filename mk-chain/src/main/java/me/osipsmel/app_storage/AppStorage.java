@@ -6,7 +6,9 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class AppStorage {
+import me.osipsmel.api.StorageAPI;
+
+public class AppStorage implements StorageAPI{
     private final Path rootPath = Paths.get("app_data");
     private final Path storagePath = rootPath.resolve("storage");
     private final Path historyFile = rootPath.resolve("history.log"); // Проще хранить историю в логе
@@ -21,6 +23,7 @@ public class AppStorage {
     }
 
     // 1. Копируем файл юзера к себе
+    @Override
     public String importFile(File source) {
         if (source == null || !source.exists()) {
             throw new StorageException("Файл не найден на диске", null);
@@ -46,6 +49,7 @@ public class AppStorage {
     }
 
     // 2. Получаем список всех импортов (просто смотрим, что лежит в папке)
+    @Override
     public List<String> getAvailableFiles() throws IOException {
         try (var s = Files.list(storagePath)) {
             return s.map(p -> p.getFileName().toString()).collect(Collectors.toList());
@@ -54,6 +58,7 @@ public class AppStorage {
 
     // 3. Работа с историей (Last 3)
     // Храним в формате: Prompt|Result (одна строка - одна запись)
+    @Override
     public void saveHistory(String prompt, String result) {
         try {
             // Убираем переносы строк из промпта и резалта для однострочного хранения
@@ -71,10 +76,11 @@ public class AppStorage {
     }
 
     // Чтение конкретного файла для генератора
+    @Override
     public String getFileContent(String fileName) throws IOException {
         return Files.readString(storagePath.resolve(fileName));
     }
-
+    @Override
     public String getHistoryEntry(int index) {
     try {
         List<String> history = Files.readAllLines(historyFile);
