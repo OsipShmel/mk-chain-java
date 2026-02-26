@@ -1,6 +1,10 @@
 package me.osipsmel.api;
-import me.osipsmel.api.SourceType;
 
 public record GenRequest(String data, SourceType type) {
-
+    public String resolveContent(StorageAPI resolver) throws Exception {
+        return switch (type) {
+            case FILE -> resolver.getFileContent(data);
+            case RAW_TEXT -> data;
+        };
+    }
 }

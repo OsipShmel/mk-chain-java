@@ -1,7 +1,12 @@
 package me.osipsmel;
-import me.osipsmel.mediator.Mediator;
+
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+
+import me.osipsmel.mediator.Mediator;
+import me.osipsmel.app_storage.AppStorage;
+import me.osipsmel.generator.Generator;
+import me.osipsmel.ui.Ui;
 
 public class App {
     public static void main(String[] args) {
@@ -15,8 +20,7 @@ public class App {
 
         // 2. Запускаем приложение в потоке обработки событий Swing
         SwingUtilities.invokeLater(() -> {
-            // Создаем медиатор (он создаст Storage, Generator и UI внутри себя)
-            Mediator mediator = new Mediator();
+            Mediator mediator = new Mediator(Generator::new, AppStorage::new, Ui::new);
             
             // Показываем окно
             mediator.show();

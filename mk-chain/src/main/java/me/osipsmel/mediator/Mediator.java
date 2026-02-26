@@ -3,28 +3,34 @@ package me.osipsmel.mediator;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.swing.JFrame;
+
 
 import me.osipsmel.api.GenRequest;
 import me.osipsmel.api.MediatorAPI;
 import me.osipsmel.api.ViewAPI;
-import me.osipsmel.app_storage.AppStorage;
+import me.osipsmel.api.GeneratorAPI;
+import me.osipsmel.api.StorageAPI;
+
 import me.osipsmel.app_storage.StorageException;
-import me.osipsmel.generator.Generator;
-import me.osipsmel.ui.Ui;
+
 
 public class Mediator implements MediatorAPI{
     private final ViewAPI view;
-    private final Generator generator;
-    private final AppStorage storage;
+    private final GeneratorAPI generator;
+    private final StorageAPI storage;
 
-    public Mediator(){
-        this.generator = new Generator();
-        this.storage = new AppStorage();
-        this.view = new Ui(this);
+    public Mediator(Supplier<GeneratorAPI> generatorFactory, 
+        Supplier<StorageAPI> storageFactory, 
+        Function<MediatorAPI, ViewAPI> viewFactory) {
+        this.generator = generatorFactory.get();
+        this.storage = storageFactory.get();
+        this.view = viewFactory.apply(this);
     }
-
+    @Override
     public void show() {
         ((JFrame)view).setVisible(true);
     }
@@ -55,10 +61,7 @@ public class Mediator implements MediatorAPI{
     public void startGeneration(GenRequest req, int len, int depth){
         new Thread(()-> {
             try{
-                String corpus = switch (req.type()) {
-                    case FILE -> storage.getFileContent(req.data());
-                    case RAW_TEXT -> req.data();
-                };
+                String corpus = req.resolveContent((StorageAPI) storage);
 
 
                 if(corpus==null || corpus.isBlank()){
@@ -66,7 +69,7 @@ public class Mediator implements MediatorAPI{
                 }
                 view.clearOutput();
 
-                var item = generator.generateLazy(corpus, null, len, depth);
+                var item = generator.generate(corpus, null, len, depth);
                 StringBuilder result = new StringBuilder();
                 while(item.hasNext()){
                     String word = item.next();
